@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Churn Prediction</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d1b2a, #1b263b);
+            font-family: 'Poppins', sans-serif;
+            color: #e0e1dd;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container { padding: 70px 40px; }
+        .header {
+            background: linear-gradient(135deg, #ff006e, #ffba08);
+            border-radius: 30px;
+            padding: 5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1.5s ease-in;
+            margin-bottom: 60px;
+            backdrop-filter: blur(5px);
+        }
+        .header h1 {
+            font-weight: 800;
+            font-size: 3.5rem;
+            background: linear-gradient(90deg, #fff, #e0e1dd);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 3px 10px rgba(255, 186, 8, 0.5);
+            animation: glow 2s infinite alternate;
+        }
+        .header h4 {
+            font-weight: 600;
+            font-size: 2rem;
+            color: #fff;
+            animation: pulse 2s infinite;
+        }
+        .header p { font-size: 1.5rem; color: #e0e1dd; font-weight: 600; }
+        .btn-back {
+            background: linear-gradient(135deg, #ffba08, #ff006e);
+            color: #fff;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-weight: 600;
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 15px rgba(255, 186, 8, 0.5);
+        }
+        .btn-back:hover { transform: scale(1.1); box-shadow: 0 10px 25px rgba(255, 0, 110, 0.7); }
+        .form-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            padding: 5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: slideUp 1.5s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .form-container h2 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ffba08, #ff006e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 3px 10px rgba(255, 186, 8, 0.5);
+            animation: glow 2s infinite alternate;
+        }
+        .form-control, .form-select {
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(27, 38, 59, 0.8); /* Darker background for better contrast */
+            color: #e0e1dd; /* Ensure text remains visible */
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #ffba08;
+            box-shadow: 0 0 15px rgba(255, 186, 8, 0.5);
+            background-color: rgba(27, 38, 59, 0.9); /* Slightly darker on focus */
+            color: #e0e1dd; /* Ensure text remains visible on focus */
+        }
+        .form-select {
+            appearance: none; /* Remove default arrow in some browsers */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23e0e1dd' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+        }
+        .form-select option {
+            background-color: #1b263b; /* Match the dark theme for dropdown options */
+            color: #e0e1dd; /* Ensure option text is visible */
+        }
+        .form-select:hover {
+            background-color: rgba(27, 38, 59, 0.85); /* Slightly lighter on hover */
+            color: #e0e1dd; /* Ensure text remains visible on hover */
+        }
+        .form-label {
+            font-weight: 600;
+            color: #ffba08;
+            font-size: 1.2rem;
+        }
+        .btn-primary, .btn-info {
+            background: linear-gradient(135deg, #ff006e, #ffba08);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 40px;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 15px rgba(255, 0, 110, 0.5);
+        }
+        .btn-info { background: linear-gradient(135deg, #ffba08, #ff006e); }
+        .btn-primary:hover, .btn-info:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(255, 0, 110, 0.7);
+        }
+        .gauge-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-top: 60px;
+            animation: slideUp 1.5s ease-out;
+        }
+        .gauge-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            width: 32%;
+            text-align: center;
+            transition: transform 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gauge-card:hover { transform: translateY(-15px); }
+        .gauge-card h5 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #ffba08, #ff006e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: glow 2s infinite alternate;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            padding: 3rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            margin-top: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card h3 {
+            font-weight: 800;
+            font-size: 2rem;
+            color: #ffffff; /* Darker text for visibility */
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1.5s ease-in;
+        }
+        .result-text {
+            font-size: 1.4rem;
+            color: #ffba08;
+            font-weight: 600;
+            padding: 15px;
+            background: rgba(255, 186, 8, 0.1);
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+        .score-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ff006e, #ffba08);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: glow 2s infinite alternate;
+        }
+        .extra-space {
+            height: 120px;
+            background: rgba(255, 255, 255, 0.03);
+            margin: 30px 0;
+            border-radius: 20px;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(70px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px rgba(255, 186, 8, 0.5); }
+            100% { text-shadow: 0 0 20px rgba(255, 0, 110, 0.8); }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 186, 8, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 186, 8, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(255, 186, 8, 0.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1 class="slide-up">Customer Churn Prediction</h1>
+            <p class="slide-up">Unlock Insights with Premium Analytics</p>
+            {% if prediction_text %}
+                <h4 class="mt-4 slide-up"><b class="score-text">{{ prediction_text }}</b></h4>
+                <p class="mt-3 result-text">{{ prediction_probability }}</p>
+                <p class="mt-3 result-text">{{ prediction_percentage }}</p>
+            {% endif %}
+        </div>
+
+        <a class="btn btn-back mb-5 slide-up" href="/">Back to Home</a>
+
+        {% if prediction_text %}
+        <div class="gauge-container">
+            <div class="gauge-card slide-up"><h5>{{ selected_model }} Churn Score</h5><div id="gauge-score"></div></div>
+            <div class="gauge-card slide-up"><h5>{{ selected_model }} Churn Probability</h5><div id="gauge-probability"></div></div>
+            <div class="gauge-card slide-up"><h5>{{ selected_model }} Churn Percentage</h5><div id="gauge-percentage"></div></div>
+        </div>
+        <div class="extra-space"></div>
+        {% endif %}
+
+        {% if shap_waterfall_img %}
+        <div class="card slide-up">
+            <h3 class="text-center">SHAP Waterfall Analysis</h3>
+            <img src="data:image/png;base64,{{ shap_waterfall_img }}" alt="SHAP Waterfall Plot" class="img-fluid">
+        </div>
+        <div class="extra-space"></div>
+        {% endif %}
+        {% if feature_importance_img %}
+        <div class="card slide-up">
+            <h3 class="text-center">Feature Importance Breakdown</h3>
+            <img src="data:image/png;base64,{{ feature_importance_img }}" alt="Feature Importance" class="img-fluid">
+        </div>
+        <div class="extra-space"></div>
+        {% endif %}
+
+        <div class="form-container">
+            <h2 class="text-center slide-up">Enter Customer Details</h2>
+            <form action="/prediction" method="POST">
+                <div class="row g-5">
+                    <div class="col-md-12 slide-up">
+                        <label for="model" class="form-label">Select Prediction Model</label>
+                        <select class="form-select" id="model" name="model" required>
+                            <option value="XGBoost" {% if selected_model == "XGBoost" %}selected{% endif %}>XGBoost</option>
+                            <option value="Decision Tree" {% if selected_model == "Decision Tree" %}selected{% endif %}>Decision Tree</option>
+                            <option value="Random Forest" {% if selected_model == "Random Forest" %}selected{% endif %}>Random Forest</option>
+                            <option value="Voting Classifier" {% if selected_model == "Voting Classifier" %}selected{% endif %}>Voting Classifier</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 slide-up">
+                        <label for="threshold" class="form-label">Churn Probability Threshold (%)</label>
+                        <input type="number" step="0.1" min="0" max="100" id="threshold" name="threshold" class="form-control" value="{{ threshold|default(50) }}" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="age" class="form-label">Age</label>
+                        <input type="number" min="1" id="age" name="age" class="form-control" placeholder="Enter age" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="last_login" class="form-label">Days Since Last Login</label>
+                        <input type="number" id="last_login" name="last_login" class="form-control" placeholder="Days since last login" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="avg_time_spent" class="form-label">Average Time Spent</label>
+                        <input type="number" step="0.01" id="avg_time_spent" name="avg_time_spent" class="form-control" placeholder="Average time spent" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="avg_transaction_value" class="form-label">Average Transaction Value</label>
+                        <input type="number" step="0.01" id="avg_transaction_value" name="avg_transaction_value" class="form-control" placeholder="Average transaction value" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="points_in_wallet" class="form-label">Points in Wallet</label>
+                        <input type="number" step="0.01" id="points_in_wallet" name="points_in_wallet" class="form-control" placeholder="Points in wallet" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="date" class="form-label">Joining Date</label>
+                        <input type="date" id="date" name="date" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="time" class="form-label">Last Visit Time (HH:MM:SS)</label>
+                        <input type="time" id="time" name="time" class="form-control" step="1" required>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-select" id="gender" name="gender" required>
+                            <option value="Unknown" selected>-- Select Gender --</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="region_category" class="form-label">Region Category</label>
+                        <select class="form-select" id="region_category" name="region_category" required>
+                            <option value="Unknown" selected>-- Select Region --</option>
+                            <option value="Town">Town</option>
+                            <option value="City">City</option>
+                            <option value="Village">Village</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="membership_category" class="form-label">Membership Category</label>
+                        <select class="form-select" id="membership_category" name="membership_category" required>
+                            <option value="Unknown" selected>-- Select Membership --</option>
+                            <option value="Basic Membership">Basic Membership</option>
+                            <option value="No Membership">No Membership</option>
+                            <option value="Gold Membership">Gold Membership</option>
+                            <option value="Platinum Membership">Platinum Membership</option>
+                            <option value="Silver Membership">Silver Membership</option>
+                            <option value="Premium Membership">Premium Membership</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="joined_through_referral" class="form-label">Joined Through Referral</label>
+                        <select class="form-select" id="joined_through_referral" name="joined_through_referral" required>
+                            <option value="Unknown" selected>-- Select --</option>
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="preferred_offer_types" class="form-label">Preferred Offer Types</label>
+                        <select class="form-select" id="preferred_offer_types" name="preferred_offer_types" required>
+                            <option value="Unknown" selected>-- Select Offer Type --</option>
+                            <option value="Gift Vouchers/Coupons">Gift Vouchers/Coupons</option>
+                            <option value="Credit/Debit Card Offers">Credit/Debit Card Offers</option>
+                            <option value="Without Offers">Without Offers</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="medium_of_operation" class="form-label">Medium of Operation</label>
+                        <select class="form-select" id="medium_of_operation" name="medium_of_operation" required>
+                            <option value="Unknown" selected>-- Select Medium --</option>
+                            <option value="Desktop">Desktop</option>
+                            <option value="Smartphone">Smartphone</option>
+                            <option value="Both">Both</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="internet_option" class="form-label">Internet Option</label>
+                        <select class="form-select" id="internet_option" name="internet_option" required>
+                            <option value="Unknown" selected>-- Select Internet Option --</option>
+                            <option value="Wi-Fi">Wi-Fi</option>
+                            <option value="Mobile_Data">Mobile Data</option>
+                            <option value="Fiber_Optic">Fiber Optic</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="used_special_discount" class="form-label">Used Special Discount</label>
+                        <select class="form-select" id="used_special_discount" name="used_special_discount" required>
+                            <option value="Unknown" selected>-- Select --</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="offer_application_preference" class="form-label">Offer Application Preference</label>
+                        <select class="form-select" id="offer_application_preference" name="offer_application_preference" required>
+                            <option value="Unknown" selected>-- Select --</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="past_complaint" class="form-label">Past Complaint</label>
+                        <select class="form-select" id="past_complaint" name="past_complaint" required>
+                            <option value="Unknown" selected>-- Select --</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 slide-up">
+                        <label for="feedback" class="form-label">Feedback</label>
+                        <select class="form-select" id="feedback" name="feedback" required>
+                            <option value="Unknown" selected>-- Select Feedback --</option>
+                            <option value="Poor Product Quality">Poor Product Quality</option>
+                            <option value="No reason specified">No Reason Specified</option>
+                            <option value="Too many ads">Too Many Ads</option>
+                            <option value="Poor Website">Poor Website</option>
+                            <option value="Poor Customer Service">Poor Customer Service</option>
+                            <option value="Reasonable Price">Reasonable Price</option>
+                            <option value="User Friendly Website">User Friendly Website</option>
+                            <option value="Products always in Stock">Products Always in Stock</option>
+                            <option value="Quality Customer Care">Quality Customer Care</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="text-center mt-6 slide-up">
+                    <button type="submit" class="btn btn-primary">Predict Churn</button>
+                    <a href="/graph" class="btn btn-info ms-4">View Model Accuracy</a>
+                    {% if prediction_text %}
+                    <a href="{{ url_for('graph', score=score, probability=probability, percentage=percentage, model=selected_model, age=df_results[0].age, last_login=df_results[0].days_since_last_login, avg_time_spent=df_results[0].avg_time_spent, avg_transaction_value=df_results[0].avg_transaction_value, points_in_wallet=df_results[0].points_in_wallet) }}" class="btn btn-info ms-4">View Graphs</a>
+                    <a href="{{ url_for('export_pdf', type='single', df_results=df_results_json) }}" class="btn btn-info ms-4">Export PDF</a>
+                    <a href="{{ url_for('export_excel', type='single', df_results=df_results_json) }}" class="btn btn-info ms-4">Export Excel</a>
+                    {% endif %}
+                    <a href="/batch_prediction" class="btn btn-primary ms-4">Batch Prediction</a>
+                </div>
+            </form>
+        </div>
+        <div class="extra-space"></div>
+
+        {% if prediction_text %}
+        <script>
+            window.onload = function() {
+                var scoreText = "{{ prediction_text }}", scoreMatch = scoreText.match(/(\d+\.\d+|\d+)/), churnScore = scoreMatch ? parseFloat(scoreMatch[0]) : 0;
+                var probText = "{{ prediction_probability }}", probMatch = probText.match(/(\d+\.\d+|\d+)/), churnProbability = probMatch ? parseFloat(probMatch[0]) : 0;
+                var percText = "{{ prediction_percentage }}", percMatch = percText.match(/(\d+\.\d+|\d+)/), churnPercentage = percMatch ? parseFloat(percMatch[0]) : 0;
+
+                var gaugeConfig = {
+                    axis: { range: [0, 100], tickwidth: 1, tickcolor: "#ffba08" },
+                    bar: { color: "#ff006e", thickness: 0.2 },
+                    steps: [{ range: [0, 30], color: "#34c759" }, { range: [30, 70], color: "#ffba08" }, { range: [70, 100], color: "#ff006e" }],
+                    bgcolor: "rgba(255, 255, 255, 0.05)",
+                    borderwidth: 0
+                };
+
+                Plotly.newPlot('gauge-score', [{ type: "indicator", mode: "gauge+number", value: churnScore, title: { text: "{{ selected_model }} Churn Score (%)", font: { size: 16, family: "Poppins", color: "#ffba08" } }, gauge: gaugeConfig }], { width: 400, height: 350, margin: { t: 50, r: 25, l: 25, b: 25 } });
+                Plotly.newPlot('gauge-probability', [{ type: "indicator", mode: "gauge+number", value: churnProbability, title: { text: "{{ selected_model }} Churn Probability (%)", font: { size: 16, family: "Poppins", color: "#ffba08" } }, gauge: gaugeConfig }], { width: 400, height: 350, margin: { t: 50, r: 25, l: 25, b: 25 } });
+                Plotly.newPlot('gauge-percentage', [{ type: "indicator", mode: "gauge+number", value: churnPercentage, title: { text: "{{ selected_model }} Churn Percentage (%)", font: { size: 16, family: "Poppins", color: "#ffba08" } }, gauge: gaugeConfig }], { width: 400, height: 350, margin: { t: 50, r: 25, l: 25, b: 25 } });
+            };
+        </script>
+        {% endif %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'930517d59d0749f2',t:'MTc0NDY1MzUyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>

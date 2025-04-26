@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Model Performance & Insights</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d1b2a, #1b263b);
+            font-family: 'Poppins', sans-serif;
+            color: #e0e1dd;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container { padding: 70px 40px; }
+        .header {
+            background: linear-gradient(135deg, #ff006e, #ffba08);
+            border-radius: 30px;
+            padding: 4rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            margin-bottom: 60px;
+            backdrop-filter: blur(5px);
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            padding: 4rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            margin-bottom: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card-custom:hover { transform: translateY(-10px); }
+        .dashboard-card {
+            background: linear-gradient(135deg, rgba(13, 27, 42, 0.9), rgba(27, 38, 59, 0.9));
+            border-radius: 25px;
+            padding: 3rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 186, 8, 0.3);
+            transition: all 0.4s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 60px rgba(255, 0, 110, 0.5);
+        }
+        .dashboard-card h3 {
+            font-weight: 800;
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #ffba08, #ff006e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 3px 10px rgba(255, 186, 8, 0.5);
+            animation: glow 2s infinite alternate;
+        }
+        .btn-back {
+            background: linear-gradient(135deg, #ffba08, #ff006e);
+            color: #fff;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 15px rgba(255, 186, 8, 0.5);
+        }
+        .btn-back:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(255, 0, 110, 0.7);
+        }
+        .chart-container {
+            margin-bottom: 50px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .chart-container:hover { box-shadow: 0 15px 40px rgba(255, 186, 8, 0.2); }
+        .chart-label {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffba08;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        h1 {
+            font-weight: 800;
+            font-size: 3.5rem;
+            background: linear-gradient(90deg, #fff, #e0e1dd);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 3px 10px rgba(255, 186, 8, 0.5);
+            animation: glow 2s infinite alternate;
+        }
+        h2 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ffba08, #ff006e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 3px 10px rgba(255, 186, 8, 0.5);
+            animation: glow 2s infinite alternate;
+        }
+        .result-text {
+            font-size: 1.4rem;
+            color: #ffba08;
+            font-weight: 600;
+            padding: 15px;
+            background: rgba(255, 186, 8, 0.1);
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+        .score-text {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ff006e, #ffba08);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: glow 2s infinite alternate;
+        }
+        .extra-space {
+            height: 120px;
+            background: rgba(255, 255, 255, 0.03);
+            margin: 30px 0;
+            border-radius: 20px;
+        }
+        .table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .table thead {
+            background: linear-gradient(135deg, #ff006e, #ffba08);
+            color: #fff;
+        }
+        .fade-in { animation: fadeIn 1.5s ease-in; }
+        .slide-up { animation: slideUp 1.5s ease-out; }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(70px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px rgba(255, 186, 8, 0.5); }
+            100% { text-shadow: 0 0 20px rgba(255, 0, 110, 0.8); }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 186, 8, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 186, 8, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(255, 186, 8, 0.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1 class="slide-up">Model Performance & Insights</h1>
+            <p class="slide-up">Advanced Analytics for {{ selected_model }}</p>
+        </div>
+
+        <a class="btn btn-back mb-5 slide-up" href="/">Back to Home</a>
+
+        <!-- Existing Sections -->
+        <div class="card-custom slide-up">
+            <h2 class="text-center">Prediction DataFrame</h2>
+            <table class="table table-hover mt-4">
+                <thead>
+                    <tr>
+                        <th>Customer Index</th>
+                        <th>Age</th>
+                        <th>Days Since Last Login</th>
+                        <th>Avg Time Spent</th>
+                        <th>Avg Transaction Value</th>
+                        <th>Points in Wallet</th>
+                        <th>Churn Score</th>
+                        <th>Probability (%)</th>
+                        <th>Percentage (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in df_results %}
+                    <tr>
+                        <td>{{ result.customer_index }}</td>
+                        <td>{{ result.age }}</td>
+                        <td>{{ result.days_since_last_login }}</td>
+                        <td>{{ result.avg_time_spent | round(2) }}</td>
+                        <td>{{ result.avg_transaction_value | round(2) }}</td>
+                        <td>{{ result.points_in_wallet | round(2) }}</td>
+                        <td class="score-text">{{ result.score | round(2) }}</td>
+                        <td class="score-text">{{ result.probability | round(2) }}</td>
+                        <td class="score-text">{{ result.percentage | round(2) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="extra-space"></div>
+
+        <div class="card-custom slide-up">
+            <h2 class="text-center">Visual Analytics</h2>
+            <div class="row">
+                <div class="col-md-6 chart-container"><div id="bar-chart"><span class="chart-label">Churn Scores</span></div></div>
+                <div class="col-md-6 chart-container"><div id="gauge-chart"><span class="chart-label">Churn Probability</span></div></div>
+                <div class="col-md-6 chart-container"><div id="pie-chart"><span class="chart-label">Risk Distribution</span></div></div>
+                <div class="col-md-6 chart-container"><div id="line-chart"><span class="chart-label">Probability Trend</span></div></div>
+                <div class="col-md-6 chart-container"><div id="scatter-chart"><span class="chart-label">Score vs Probability</span></div></div>
+                <div class="col-md-6 chart-container"><div id="box-chart"><span class="chart-label">Score Distribution</span></div></div>
+            </div>
+        </div>
+        <div class="extra-space"></div>
+
+        <div class="card-custom slide-up">
+            <h2 class="text-center">Insights & Patterns</h2>
+            <ul>
+                {% for insight in insights %}
+                <li class="result-text slide-up">{{ insight }}</li>
+                {% endfor %}
+            </ul>
+            <div class="row">
+                <div class="col-md-6 chart-container"><div id="insight-scatter-prob-age"><span class="chart-label">Probability vs Age</span></div></div>
+                <div class="col-md-6 chart-container"><div id="insight-box-score"><span class="chart-label">Score Distribution</span></div></div>
+                <div class="col-md-6 chart-container"><div id="insight-scatter-time-prob"><span class="chart-label">Time Spent vs Probability</span></div></div>
+                <div class="col-md-6 chart-container"><div id="insight-bar-login-prob"><span class="chart-label">Days Since Login vs Probability</span></div></div>
+                <div class="col-md-6 chart-container"><div id="insight-pie-risk"><span class="chart-label">Risk Distribution</span></div></div>
+                <div class="col-md-6 chart-container"><div id="insight-gauge-score"><span class="chart-label">Churn Score</span></div></div>
+            </div>
+        </div>
+        <div class="extra-space"></div>
+
+        <div class="card-custom slide-up">
+            <h2 class="text-center">Business Recommendations</h2>
+            <ul>
+                {% for recommendation in recommendations %}
+                <li class="result-text slide-up">{{ recommendation }}</li>
+                {% endfor %}
+            </ul>
+            <div class="row">
+                <div class="col-md-6 chart-container"><div id="rec-bar-churn"><span class="chart-label">Churn Scores</span></div></div>
+                <div class="col-md-6 chart-container"><div id="rec-line-prob"><span class="chart-label">Probability Trend</span></div></div>
+                <div class="col-md-6 chart-container"><div id="rec-pie-percentage"><span class="chart-label">Percentage Distribution</span></div></div>
+                <div class="col-md-6 chart-container"><div id="rec-scatter-age-score"><span class="chart-label">Age vs Score</span></div></div>
+                <div class="col-md-6 chart-container"><div id="rec-bar-time"><span class="chart-label">Average Time Spent</span></div></div>
+                <div class="col-md-6 chart-container"><div id="rec-gauge-risk"><span class="chart-label">Risk Level</span></div></div>
+            </div>
+        </div>
+        <div class="extra-space"></div>
+
+        <div class="card-custom slide-up">
+            <h2 class="text-center">Model Accuracy Metrics</h2>
+            <table class="table table-hover mt-4">
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Accuracy (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Random Forest</td><td><span class="badge bg-primary score-text">{{ rf_accuracy }}%</span></td></tr>
+                    <tr><td>Decision Tree</td><td><span class="badge bg-secondary score-text">{{ dt_accuracy }}%</span></td></tr>
+                    <tr><td>XGBoost</td><td><span class="badge bg-success score-text">{{ xgb_accuracy }}%</span></td></tr>
+                    <tr><td>Ensemble</td><td><span class="badge bg-danger score-text">{{ ensemble_accuracy }}%</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="extra-space"></div>
+
+        <!-- New Dashboard Section -->
+        <div class="card-custom slide-up">
+            <h2 class="text-center">Churn Prediction Dashboard</h2>
+            <!-- Earlier Proposed Visualizations -->
+            <div class="dashboard-card slide-up">
+                <h3 class="text-center">Earlier Proposed Visualizations</h3>
+                <div class="row">
+                    <div class="col-md-6 chart-container"><div id="dash-heatmap"><span class="chart-label">Churn by Region & Membership</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-histogram"><span class="chart-label">Churn Probability Distribution</span></div></div>
+                    <div class="col-md-12 chart-container"><div id="dash-table"><span class="chart-label">Top Customers</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-timeseries"><span class="chart-label">Churn Trend Over Time</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-sankey"><span class="chart-label">Customer Flow</span></div></div>
+                </div>
+            </div>
+            <!-- Second Set of Proposed Visualizations -->
+            <div class="dashboard-card slide-up">
+                <h3 class="text-center">Second Set of Proposed Visualizations</h3>
+                <div class="row">
+                    <div class="col-md-6 chart-container"><div id="dash-treemap"><span class="chart-label">Membership Breakdown</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-radar"><span class="chart-label">Churned vs Retained Profiles</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-wordcloud"><span class="chart-label">Feedback Summary</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-funnel"><span class="chart-label">Retention Funnel</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-bubble"><span class="chart-label">Age vs Probability</span></div></div>
+                </div>
+            </div>
+            <!-- Newly Proposed Visualizations -->
+            <div class="dashboard-card slide-up">
+                <h3 class="text-center">Newly Proposed Visualizations</h3>
+                <div class="row">
+                    <div class="col-md-6 chart-container"><div id="dash-parallel"><span class="chart-label">Customer Profiles</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-violin"><span class="chart-label">Probability by Membership</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-area"><span class="chart-label">Risk Levels Over Time</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-hexbin"><span class="chart-label">Age vs Probability Density</span></div></div>
+                    <div class="col-md-6 chart-container"><div id="dash-network"><span class="chart-label">Referral Network</span></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="extra-space"></div>
+    </div>
+
+    <script>
+        let chartData = JSON.parse('{{ chart_data | safe }}');
+        let insightsChartData = JSON.parse('{{ insights_chart_data | safe }}');
+        let recommendationsChartData = JSON.parse('{{ recommendations_chart_data | safe }}');
+        let dashboardChartData = JSON.parse('{{ dashboard_chart_data | safe }}');
+
+        // Common layout configuration
+        const layoutConfig = {
+            plot_bgcolor: 'rgba(255, 255, 255, 0.05)',
+            paper_bgcolor: 'rgba(0, 0, 0, 0)',
+            font: { family: 'Poppins', size: 12, color: '#e0e1dd' },
+            xaxis: { gridcolor: 'rgba(255, 255, 255, 0.1)', zerolinecolor: 'rgba(255, 255, 255, 0.2)', title_font: { size: 14 }, tickfont: { size: 12 } },
+            yaxis: { gridcolor: 'rgba(255, 255, 255, 0.1)', zerolinecolor: 'rgba(255, 255, 255, 0.2)', title_font: { size: 14 }, tickfont: { size: 12 } },
+            margin: { t: 50, r: 25, l: 50, b: 50 },
+            height: 400,
+            autosize: true,
+            showlegend: true,
+            transition: { duration: 1000, easing: 'cubic-in-out' },
+            hovermode: 'closest',
+            hoverlabel: { bgcolor: '#ff006e', font: { color: '#fff', family: 'Poppins' } }
+        };
+
+        // Existing Charts (unchanged)
+        Plotly.newPlot('bar-chart', [{
+            x: chartData.labels,
+            y: chartData.scores,
+            type: 'bar',
+            marker: { color: '#ff006e', line: { color: '#ffba08', width: 1 } },
+            hoverinfo: 'y+text',
+            text: chartData.scores.map(s => s.toFixed(2)),
+            textposition: 'auto'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Scores by Customer', font: { size: 18 } },
+            xaxis: { title: 'Customer' },
+            yaxis: { title: 'Score (%)', range: [0, Math.max(...chartData.scores) * 1.2] }
+        });
+
+        Plotly.newPlot('gauge-chart', [{
+            type: 'indicator',
+            mode: 'gauge+number+delta',
+            value: chartData.probabilities[0],
+            delta: { reference: 50, increasing: { color: '#ff006e' }, decreasing: { color: '#34c759' } },
+            gauge: {
+                axis: { range: [0, 100], tickwidth: 1, tickcolor: '#ffba08' },
+                bar: { color: '#ff006e', thickness: 0.2 },
+                steps: [
+                    { range: [0, 30], color: '#34c759' },
+                    { range: [30, 70], color: '#ffba08' },
+                    { range: [70, 100], color: '#ff006e' }
+                ],
+                threshold: { line: { color: '#fff', width: 4 }, thickness: 0.75, value: 50 }
+            }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Probability (%)', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('pie-chart', [{
+            values: chartData.risk_distribution,
+            labels: ['Low (<30%)', 'Medium (30-60%)', 'High (>60%)'],
+            type: 'pie',
+            marker: { colors: ['#34c759', '#ffba08', '#ff006e'], line: { color: '#fff', width: 1 } },
+            textinfo: 'percent+label',
+            hoverinfo: 'label+percent+value',
+            hole: 0.4
+        }], {
+            ...layoutConfig,
+            title: { text: 'Risk Distribution Across Customers', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('line-chart', [{
+            x: chartData.labels,
+            y: chartData.probabilities,
+            type: 'scatter',
+            mode: 'lines+markers',
+            marker: { color: '#ff006e', size: 10, line: { color: '#ffba08', width: 1 } },
+            line: { color: '#ffba08', width: 2, shape: 'spline' },
+            hoverinfo: 'y+text',
+            text: chartData.probabilities.map(p => p.toFixed(2) + '%')
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Probability Trend', font: { size: 18 } },
+            xaxis: { title: 'Customer' },
+            yaxis: { title: 'Probability (%)', range: [0, 100] }
+        });
+
+        Plotly.newPlot('scatter-chart', [{
+            x: chartData.scores,
+            y: chartData.probabilities,
+            mode: 'markers',
+            type: 'scatter',
+            marker: { size: 12, color: '#ffba08', line: { color: '#ff006e', width: 1 }, opacity: 0.8 },
+            hoverinfo: 'x+y+text',
+            text: chartData.labels
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Score vs Probability', font: { size: 18 } },
+            xaxis: { title: 'Churn Score' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        Plotly.newPlot('box-chart', [{
+            y: chartData.scores,
+            type: 'box',
+            boxpoints: 'all',
+            jitter: 0.3,
+            pointpos: -1.8,
+            marker: { color: '#ff006e', size: 8 },
+            line: { color: '#ffba08', width: 2 }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Score Distribution', font: { size: 18 } },
+            yaxis: { title: 'Score (%)' }
+        });
+
+        Plotly.newPlot('insight-scatter-prob-age', [{
+            x: insightsChartData.probability_vs_age.x,
+            y: insightsChartData.probability_vs_age.y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: { color: '#34c759', size: 10, line: { color: '#ffba08', width: 1 } },
+            hoverinfo: 'x+y'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Probability vs Age', font: { size: 18 } },
+            xaxis: { title: 'Age' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        Plotly.newPlot('insight-box-score', [{
+            y: insightsChartData.score_distribution,
+            type: 'box',
+            marker: { color: '#ffba08' },
+            line: { color: '#ff006e', width: 2 }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Score Distribution', font: { size: 18 } },
+            yaxis: { title: 'Score (%)' }
+        });
+
+        Plotly.newPlot('insight-scatter-time-prob', [{
+            x: insightsChartData.time_spent_vs_prob.x,
+            y: insightsChartData.time_spent_vs_prob.y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: { color: '#ff006e', size: 10, line: { color: '#ffba08', width: 1 } },
+            hoverinfo: 'x+y'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Time Spent vs Probability', font: { size: 18 } },
+            xaxis: { title: 'Avg Time Spent' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        Plotly.newPlot('insight-bar-login-prob', [{
+            x: insightsChartData.login_vs_prob.x,
+            y: insightsChartData.login_vs_prob.y,
+            type: 'bar',
+            marker: { color: '#ffba08', line: { color: '#ff006e', width: 1 } },
+            hoverinfo: 'y'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Days Since Login vs Probability', font: { size: 18 } },
+            xaxis: { title: 'Days' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        Plotly.newPlot('insight-pie-risk', [{
+            values: insightsChartData.risk_pie,
+            labels: ['Low', 'Medium', 'High'],
+            type: 'pie',
+            marker: { colors: ['#34c759', '#ffba08', '#ff006e'] },
+            textinfo: 'percent+label',
+            hoverinfo: 'label+percent+value'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Risk Distribution', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('insight-gauge-score', [{
+            type: 'indicator',
+            mode: 'gauge+number',
+            value: insightsChartData.score_gauge,
+            gauge: {
+                axis: { range: [0, 100] },
+                steps: [
+                    { range: [0, 30], color: '#34c759' },
+                    { range: [30, 70], color: '#ffba08' },
+                    { range: [70, 100], color: '#ff006e' }
+                ],
+                bar: { color: '#ffba08' }
+            }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Score Gauge', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('rec-bar-churn', [{
+            x: chartData.labels,
+            y: recommendationsChartData.churn_bar,
+            type: 'bar',
+            marker: { color: '#ff006e', line: { color: '#ffba08', width: 1 } },
+            hoverinfo: 'y'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Scores', font: { size: 18 } },
+            xaxis: { title: 'Customer' },
+            yaxis: { title: 'Score (%)' }
+        });
+
+        Plotly.newPlot('rec-line-prob', [{
+            x: chartData.labels,
+            y: recommendationsChartData.prob_trend,
+            type: 'scatter',
+            mode: 'lines+markers',
+            marker: { color: '#34c759', size: 10 },
+            line: { color: '#ffba08', width: 2, shape: 'spline' }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Probability Trend', font: { size: 18 } },
+            xaxis: { title: 'Customer' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        Plotly.newPlot('rec-pie-percentage', [{
+            values: recommendationsChartData.percentage_pie,
+            labels: ['Low', 'Medium', 'High'],
+            type: 'pie',
+            marker: { colors: ['#34c759', '#ffba08', '#ff006e'] },
+            textinfo: 'percent+label',
+            hoverinfo: 'label+percent+value'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Percentage Distribution', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('rec-scatter-age-score', [{
+            x: recommendationsChartData.age_vs_score.x,
+            y: recommendationsChartData.age_vs_score.y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: { color: '#ffba08', size: 10, line: { color: '#ff006e', width: 1 } },
+            hoverinfo: 'x+y'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Age vs Score', font: { size: 18 } },
+            xaxis: { title: 'Age' },
+            yaxis: { title: 'Score (%)' }
+        });
+
+        Plotly.newPlot('rec-bar-time', [{
+            x: chartData.labels,
+            y: recommendationsChartData.time_spent_bar,
+            type: 'bar',
+            marker: { color: '#ff006e', line: { color: '#ffba08', width: 1 } },
+            hoverinfo: 'y'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Average Time Spent', font: { size: 18 } },
+            xaxis: { title: 'Customer' },
+            yaxis: { title: 'Time Spent' }
+        });
+
+        Plotly.newPlot('rec-gauge-risk', [{
+            type: 'indicator',
+            mode: 'gauge+number',
+            value: recommendationsChartData.risk_gauge,
+            gauge: {
+                axis: { range: [0, 100] },
+                steps: [
+                    { range: [0, 30], color: '#34c759' },
+                    { range: [30, 70], color: '#ffba08' },
+                    { range: [70, 100], color: '#ff006e' }
+                ],
+                bar: { color: '#ffba08' }
+            }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Risk Level Gauge', font: { size: 18 } }
+        });
+
+        // Dashboard Charts
+        // Earlier Proposed
+        Plotly.newPlot('dash-heatmap', [{
+            z: dashboardChartData.heatmap.z,
+            x: dashboardChartData.heatmap.x,
+            y: dashboardChartData.heatmap.y,
+            type: 'heatmap',
+            colorscale: [[0, '#34c759'], [0.5, '#ffba08'], [1, '#ff006e']],
+            showscale: true
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Probability by Region and Membership', font: { size: 18 } },
+            xaxis: { title: 'Membership Category' },
+            yaxis: { title: 'Region' }
+        });
+
+        Plotly.newPlot('dash-histogram', [{
+            x: dashboardChartData.histogram.probabilities,
+            type: 'histogram',
+            marker: { color: '#ff006e', line: { color: '#ffba08', width: 1 } },
+            nbinsx: 20
+        }], {
+            ...layoutConfig,
+            title: { text: 'Distribution of Churn Probabilities', font: { size: 18 } },
+            xaxis: { title: 'Churn Probability (%)' },
+            yaxis: { title: 'Count' }
+        });
+
+        Plotly.newPlot('dash-table', [{
+            type: 'table',
+            header: {
+                values: ['Customer', 'Age', 'Probability', 'Membership'],
+                line: { color: '#ffba08' },
+                fill: { color: '#ff006e' },
+                font: { family: 'Poppins', size: 14, color: '#fff' }
+            },
+            cells: {
+                values: [
+                    dashboardChartData.table_data.map(d => d.customer_index),
+                    dashboardChartData.table_data.map(d => d.age),
+                    dashboardChartData.table_data.map(d => d.probability.toFixed(2)),
+                    dashboardChartData.table_data.map(d => d.membership_category)
+                ],
+                line: { color: '#ffba08' },
+                fill: { color: 'rgba(255, 255, 255, 0.05)' },
+                font: { family: 'Poppins', size: 12, color: '#e0e1dd' }
+            }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Top Customer Details', font: { size: 18 } },
+            height: 300
+        });
+
+        Plotly.newPlot('dash-timeseries', [{
+            x: dashboardChartData.timeseries.months,
+            y: dashboardChartData.timeseries.probabilities,
+            type: 'scatter',
+            mode: 'lines+markers',
+            marker: { color: '#ff006e', size: 10 },
+            line: { color: '#ffba08', width: 2 }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Churn Probability Over Time', font: { size: 18 } },
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'Average Probability (%)' }
+        });
+
+        Plotly.newPlot('dash-sankey', [{
+            type: 'sankey',
+            node: {
+                pad: 15,
+                thickness: 20,
+                line: { color: '#ffba08', width: 0.5 },
+                label: dashboardChartData.sankey.labels,
+                color: ['#34c759', '#ffba08', '#ff006e', '#34c759', '#ff006e']
+            },
+            link: {
+                source: dashboardChartData.sankey.source,
+                target: dashboardChartData.sankey.target,
+                value: dashboardChartData.sankey.value,
+                color: 'rgba(255, 186, 8, 0.4)'
+            }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Customer Flow from Active to Churned', font: { size: 18 } }
+        });
+
+        // Second Set
+        Plotly.newPlot('dash-treemap', [{
+            type: 'treemap',
+            labels: dashboardChartData.treemap.labels,
+            parents: dashboardChartData.treemap.parents,
+            values: dashboardChartData.treemap.values,
+            marker: { colorscale: [[0, '#34c759'], [0.5, '#ffba08'], [1, '#ff006e']] }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Membership Category Breakdown', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('dash-radar', [
+            {
+                type: 'scatterpolar',
+                r: dashboardChartData.radar.churned,
+                theta: dashboardChartData.radar.categories,
+                fill: 'toself',
+                name: 'Churned',
+                marker: { color: '#ff006e' }
+            },
+            {
+                type: 'scatterpolar',
+                r: dashboardChartData.radar.retained,
+                theta: dashboardChartData.radar.categories,
+                fill: 'toself',
+                name: 'Retained',
+                marker: { color: '#34c759' }
+            }
+        ], {
+            ...layoutConfig,
+            title: { text: 'Churned vs Retained Customer Profiles', font: { size: 18 } },
+            polar: {
+                radialaxis: { visible: true, range: [0, Math.max(...dashboardChartData.radar.churned.concat(dashboardChartData.radar.retained)) * 1.2] }
+            }
+        });
+
+        Plotly.newPlot('dash-wordcloud', [{
+            type: 'scatter',
+            x: Array.from({length: Object.keys(dashboardChartData.wordcloud.counts).length}, () => Math.random()),
+            y: Array.from({length: Object.keys(dashboardChartData.wordcloud.counts).length}, () => Math.random()),
+            text: Object.keys(dashboardChartData.wordcloud.counts),
+            mode: 'text',
+            textfont: {
+                family: 'Poppins',
+                size: Object.values(dashboardChartData.wordcloud.counts).map(v => v * 10 + 12),
+                color: '#ff006e'
+            }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Customer Feedback Summary', font: { size: 18 } },
+            xaxis: { visible: false },
+            yaxis: { visible: false },
+            showlegend: false
+        });
+
+        Plotly.newPlot('dash-funnel', [{
+            type: 'funnel',
+            y: dashboardChartData.funnel.stages,
+            x: dashboardChartData.funnel.values,
+            marker: { color: '#ff006e', line: { color: '#ffba08', width: 1 } },
+            textinfo: 'value+percent initial'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Customer Retention Funnel', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('dash-bubble', [{
+            x: dashboardChartData.bubble.x,
+            y: dashboardChartData.bubble.y,
+            mode: 'markers',
+            marker: {
+                size: dashboardChartData.bubble.sizes,
+                color: '#ff006e',
+                opacity: 0.6,
+                line: { color: '#ffba08', width: 1 }
+            }
+        }], {
+            ...layoutConfig,
+            title: { text: 'Age vs Churn Probability (Points as Size)', font: { size: 18 } },
+            xaxis: { title: 'Age' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        // Newly Proposed
+        Plotly.newPlot('dash-parallel', [{
+            type: 'parcoords',
+            line: { color: dashboardChartData.parallel.data.map(d => d[4]), colorscale: [[0, '#34c759'], [0.5, '#ffba08'], [1, '#ff006e']] },
+            dimensions: dashboardChartData.parallel.dimensions.map((dim, i) => ({
+                label: dim,
+                values: dashboardChartData.parallel.data.map(d => d[i])
+            }))
+        }], {
+            ...layoutConfig,
+            title: { text: 'Parallel Coordinates of Customer Profiles', font: { size: 18 } }
+        });
+
+        Plotly.newPlot('dash-violin', dashboardChartData.violin.categories.map((cat, i) => ({
+            type: 'violin',
+            x: [cat],
+            y: dashboardChartData.violin.probabilities[i],
+            name: cat,
+            box: { visible: true },
+            meanline: { visible: true },
+            marker: { color: '#ff006e' }
+        })), {
+            ...layoutConfig,
+            title: { text: 'Churn Probability by Membership Category', font: { size: 18 } },
+            xaxis: { title: 'Membership Category' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        Plotly.newPlot('dash-area', [
+            {
+                x: dashboardChartData.area.months,
+                y: dashboardChartData.area.high_risk,
+                name: 'High Risk',
+                stackgroup: 'one',
+                marker: { color: '#ff006e' }
+            },
+            {
+                x: dashboardChartData.area.months,
+                y: dashboardChartData.area.medium_risk,
+                name: 'Medium Risk',
+                stackgroup: 'one',
+                marker: { color: '#ffba08' }
+            },
+            {
+                x: dashboardChartData.area.months,
+                y: dashboardChartData.area.low_risk,
+                name: 'Low Risk',
+                stackgroup: 'one',
+                marker: { color: '#34c759' }
+            }
+        ], {
+            ...layoutConfig,
+            title: { text: 'Risk Levels Over Time', font: { size: 18 } },
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'Customer Count' }
+        });
+
+        Plotly.newPlot('dash-hexbin', [{
+            x: dashboardChartData.hexbin.x,
+            y: dashboardChartData.hexbin.y,
+            type: 'histogram2d',
+            colorscale: [[0, '#34c759'], [0.5, '#ffba08'], [1, '#ff006e']],
+            showscale: true
+        }], {
+            ...layoutConfig,
+            title: { text: 'Age vs Churn Probability Density', font: { size: 18 } },
+            xaxis: { title: 'Age' },
+            yaxis: { title: 'Probability (%)' }
+        });
+
+        Plotly.newPlot('dash-network', [{
+            type: 'scatter',
+            x: dashboardChartData.network.nodes.map((_, i) => Math.cos(i * 2 * Math.PI / dashboardChartData.network.nodes.length)),
+            y: dashboardChartData.network.nodes.map((_, i) => Math.sin(i * 2 * Math.PI / dashboardChartData.network.nodes.length)),
+            mode: 'markers+text',
+            text: dashboardChartData.network.nodes,
+            marker: {
+                size: dashboardChartData.network.sizes.map(s => s / 2),
+                color: '#ff006e',
+                line: { color: '#ffba08', width: 1 }
+            },
+            textposition: 'top center'
+        }], {
+            ...layoutConfig,
+            title: { text: 'Customer Referral Network', font: { size: 18 } },
+            xaxis: { visible: false },
+            yaxis: { visible: false },
+            showlegend: false
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
