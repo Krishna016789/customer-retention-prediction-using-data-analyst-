@@ -121,7 +121,6 @@ python-dateutil==2.9.0.post0
 python-json-logger==3.2.1
 pytz==2025.1
 PyWavelets==1.8.0
-pywinpty==2.0.15
 PyYAML==6.0.2
 pyzmq==24.0.1
 referencing==0.36.2
